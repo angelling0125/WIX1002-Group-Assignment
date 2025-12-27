@@ -18,18 +18,19 @@ public class Login {
     // For the first time (call once) only:
     private void loadUsers() {
         userList.clear();
+
         try (BufferedReader input = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            ArrayList<String> buffer = new ArrayList<>();
+            while (true) {
+                String email = input.readLine();
+                if (email == null) break;
 
-            while ((line = input.readLine()) != null) {
-                if (line.trim().isEmpty()) continue; // Skip empty lines.
+                String name = input.readLine();
+                String password = input.readLine();
 
-                buffer.add(line.trim()); // Add line to temporary list.
+                input.readLine(); // read blank line
 
-                if (buffer.size() == 3) {
-                    userList.add(new User(buffer.get(0), buffer.get(1), buffer.get(2)));
-                    buffer.clear(); // Empty buffer for the next person.
+                if (email != null && name != null && password != null) {
+                    userList.add(new User(email.trim(), name.trim(), password.trim()));
                 }
             }
         } catch (IOException e) {
@@ -57,8 +58,12 @@ public class Login {
     }
 
     // For GUI:
+    private boolean isValidEmail(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    }
+
     public boolean register(String email, String name, String password) {
-        if (email.length() < 19 || !email.startsWith("s10020") || !email.endsWith("@student.fop")) {
+        if (!isValidEmail(email)) {
             return false;
         }
 
@@ -74,6 +79,7 @@ public class Login {
             output.println(email);
             output.println(name);
             output.println(finalPassword);
+            output.println(); // Blank line between users
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -86,7 +92,7 @@ public class Login {
 
     private String hashPassword(String originalPassword) {
         try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
             // Create a variable named digest that holds a MessageDigest tool,
             // and fill it by asking the Security Factory to give us the SHA-256 model.
 
@@ -103,7 +109,9 @@ public class Login {
                 // 2. The Fix (0xff & b): This is a "Bitwise Mask" to treat it as positive because
                 // Integer.toHexString(...): This only takes POSITIVE number and writes it in "Base-16" language.
 
-                if (hex.length() == 1) hexString.append('0');
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
                 // Check for consistency. We want "0a", not "a" (need two characters).
 
                 hexString.append(hex);
