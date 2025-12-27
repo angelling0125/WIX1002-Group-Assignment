@@ -41,14 +41,14 @@ public class Login {
     // For GUI:
     public User login(String email, String passwordInput) {
         for (User user : userList) {
-            if (user.getEmail().equals(email)) {
+            if (user.getEmail().equals(email.trim())) {
                 String storedPassword = user.getPassword();
 
-                if (storedPassword.equals(passwordInput)) {
+                if (storedPassword.equals(passwordInput.trim())) {
                     return user;
                 }
 
-                String hashedInput = hashPassword(passwordInput);
+                String hashedInput = hashPassword(passwordInput.trim());
                 if (storedPassword.equals(hashedInput)) {
                     return user;
                 }
