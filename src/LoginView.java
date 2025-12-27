@@ -60,7 +60,16 @@ public class LoginView extends JFrame {
         loginPassword = new JPasswordField();
         form.add(loginPassword);
 
-        form.add(new JLabel(""));
+        JCheckBox showLoginPassword = new JCheckBox("Show password");
+
+        showLoginPassword.addActionListener(e -> {
+            if (showLoginPassword.isSelected()) {
+                loginPassword.setEchoChar((char) 0); // show text
+            } else {
+                loginPassword.setEchoChar('*'); // hide text
+            }
+        });
+        form.add(showLoginPassword);
 
         panel.add(form, BorderLayout.CENTER);
 
@@ -104,7 +113,7 @@ public class LoginView extends JFrame {
         title.setFont(new Font("SansSerif", Font.BOLD, 20));
         panel.add(title, BorderLayout.NORTH);
 
-        JPanel form = new JPanel(new GridLayout(6, 1, 8, 5));
+        JPanel form = new JPanel(new GridLayout(7, 1, 8, 5));
 
         form.add(new JLabel("Email"));
         regEmail = new JTextField();
@@ -117,6 +126,17 @@ public class LoginView extends JFrame {
         form.add(new JLabel("Password"));
         regPassword = new JPasswordField();
         form.add(regPassword);
+
+        JCheckBox showRegPassword = new JCheckBox("Show password");
+
+        showRegPassword.addActionListener(e -> {
+            if (showRegPassword.isSelected()) {
+                regPassword.setEchoChar((char) 0); // show text
+            } else {
+                regPassword.setEchoChar('*'); // hide text
+            }
+        });
+        form.add(showRegPassword);
 
         panel.add(form, BorderLayout.CENTER);
 
