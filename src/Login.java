@@ -63,6 +63,10 @@ public class Login {
     }
 
     public boolean register(String email, String name, String password) {
+        email = email.trim();
+        name = name.trim();
+        password = password.trim();
+
         if (!isValidEmail(email)) {
             return false;
         }
@@ -86,7 +90,7 @@ public class Login {
             return false;
         }
 
-        userList.add(new User(email.trim(), name.trim(), finalPassword.trim()));
+        userList.add(new User(email, name, finalPassword));
         return true;
     }
 
