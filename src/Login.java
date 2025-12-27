@@ -86,7 +86,7 @@ public class Login {
             return false;
         }
 
-        userList.add(new User(email, name, finalPassword));
+        userList.add(new User(email.trim(), name.trim(), finalPassword.trim()));
         return true;
     }
 
