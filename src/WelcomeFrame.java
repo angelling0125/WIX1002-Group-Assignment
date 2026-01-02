@@ -1,77 +1,80 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package com.mycompany.welcomeframe;
-
-/**
- *
- * @author weini
- */
 import javax.swing.*;
 import java.awt.*;
 import java.time.*;
 
 public class WelcomeFrame extends JFrame {
 
-    public WelcomeFrame(String name) {
+    private String email;
 
-        //Window settings
+    public WelcomeFrame(String email, String name) {
+        this.email = email;
+
         setTitle("Smart Journal");
-        setSize(400, 400);
+        setSize(450, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        //Code logic
+        // Greeting logic
         LocalTime time = LocalTime.now(ZoneId.of("GMT+8"));
         int hour = time.getHour();
         String greeting;
 
-        if (hour < 12) {
-            greeting = "Good Morning";
-        } else if (hour < 17) {
-            greeting = "Good Afternoon";
-        } else {
-            greeting = "Good Evening";
-        }
+        if (hour < 12) greeting = "Good Morning";
+        else if (hour < 17) greeting = "Good Afternoon";
+        else greeting = "Good Evening";
 
-        //Main panel
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        // MAIN PANEL
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JLabel greetingLabel = new JLabel(greeting + " " + name, SwingConstants.CENTER);
+        JLabel greetingLabel = new JLabel(greeting + ", " + name);
         greetingLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        greetingLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // horizontal centering for BoxLayout
+        greetingLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel titleLabel = new JLabel("Welcome to Smart Journal", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("Welcome to Smart Journal");
         titleLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-        centerPanel.add(Box.createVerticalGlue());
-        centerPanel.add(greetingLabel);
-        centerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        centerPanel.add(titleLabel);
-        centerPanel.add(Box.createVerticalGlue());
-
-        //Buttons
         JButton journalButton = new JButton("Create, Edit & View Journal");
         JButton summaryButton = new JButton("View Weekly Mood Summary");
+        JButton backButton = new JButton("Back to Login");
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         journalButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         summaryButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        buttonPanel.add(journalButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        buttonPanel.add(summaryButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10))); // bottom spacing
+        backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        panel.add(centerPanel, BorderLayout.CENTER);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
+        // BUTTON ACTIONS
+        journalButton.addActionListener(e -> {
+            new JournalPageView(email, this);
+            dispose();
+        });
+
+        summaryButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Summary coming soon!");
+        });
+
+        backButton.addActionListener(e -> {
+            new LoginView(new Login("UserData.txt"));
+            dispose();
+        });
+
+        // ---- PERFECT CENTERING ----
+        panel.add(Box.createVerticalGlue());
+
+        panel.add(greetingLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(titleLabel);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(journalButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(summaryButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 30)));
+        panel.add(backButton);
+
+        panel.add(Box.createVerticalGlue());
 
         add(panel);
         setVisible(true);
     }
-
 }
