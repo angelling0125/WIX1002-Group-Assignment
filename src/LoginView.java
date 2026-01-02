@@ -179,9 +179,9 @@ public class LoginView extends JFrame {
         User user = loginService.login(email, password);
 
         if (user != null) {
-            JOptionPane.showMessageDialog(this,
-                    "Welcome " + user.getName());
-            // TODO: navigate to WelcomePage (teammate)
+            // Successful login
+            WelcomeFrame welcomeFrame = new WelcomeFrame(user.getEmail(), user.getName());
+            this.dispose();
         } else {
             loginMsg.setText("Invalid email or password");
         }
