@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.time.LocalDate;
 import java.util.Scanner;
@@ -7,70 +6,82 @@ public class journalpage {
 
     static Scanner sc = new Scanner(System.in);
 
-    public static void openJournalPage() {
-        LocalDate today = LocalDate.now();
-        LocalDate start = today.minusDays(3); // sample: past 3 days
+    // called from Main after login
+    public static void openJournalPage(String username) {
 
-        LocalDate[] dates = new LocalDate[4];
-        for (int i = 0; i < 4; i++) {
-            dates[i] = start.plusDays(i);
+        File userFolder = new File("journals/" + username);
+        if (!userFolder.exists()) {
+            userFolder.mkdirs();
         }
+
+        File[] journalFiles = userFolder.listFiles();
+        LocalDate today = LocalDate.now();
 
         System.out.println("=== Journal Dates ===");
-        for (int i = 0; i < dates.length; i++) {
-            if (dates[i].equals(today))
-                System.out.println((i + 1) + ". " + dates[i] + " (Today)");
-            else
-                System.out.println((i + 1) + ". " + dates[i]);
+
+        int count = 0;
+        LocalDate[] dates = new LocalDate[50]; // enough for Year 1
+
+        if (journalFiles != null) {
+            for (File f : journalFiles) {
+                String name = f.getName();
+                if (name.endsWith(".txt")) {
+                    LocalDate d = LocalDate.parse(name.replace(".txt", ""));
+                    dates[count++] = d;
+                }
+            }
         }
 
-        System.out.println("Select a date to view journal, or create a new journal for today:");
+        for (int i = 0; i < count; i++) {
+            System.out.println((i + 1) + ". " + dates[i]);
+        }
+
+        System.out.println((count + 1) + ". " + today + " (Today)");
+
+        System.out.print("Select a date: ");
         int choice = sc.nextInt();
         sc.nextLine();
 
-        LocalDate selectedDate = dates[choice - 1];
-
-        if (selectedDate.equals(today)) {
-            todayJournal(selectedDate);
-        } else {
-            viewJournal(selectedDate);
+        if (choice == count + 1) {
+            todayJournal(username, today);
+        } else if (choice >= 1 && choice <= count) {
+            viewJournal(username, dates[choice - 1]);
         }
     }
 
-    static void todayJournal(LocalDate date) {
-        File file = getFile(date);
+    static void todayJournal(String username, LocalDate date) {
+        File file = getFile(username, date);
 
         if (!file.exists()) {
             System.out.println("Enter your journal entry for " + date + ":");
             String entry = sc.nextLine();
             saveJournal(file, entry);
-            System.out.println("Journal saved successfully!");
+            System.out.println("Journal saved.");
+            return;
         }
 
-        System.out.println("Would you like to:");
         System.out.println("1. View Journal");
         System.out.println("2. Edit Journal");
-        System.out.println("3. Back to Dates");
+        System.out.print("Choose: ");
 
         int option = sc.nextInt();
         sc.nextLine();
 
-        if (option == 1) {
-            viewJournal(date);
-        } else if (option == 2) {
-            editJournal(date);
-        }
+        if (option == 1)
+            viewJournal(username, date);
+        else if (option == 2)
+            editJournal(username, date);
     }
 
-    static void viewJournal(LocalDate date) {
-        File file = getFile(date);
+    static void viewJournal(String username, LocalDate date) {
+        File file = getFile(username, date);
 
         if (!file.exists()) {
-            System.out.println("No journal entry found.");
+            System.out.println("No journal found.");
             return;
         }
 
-        System.out.println("=== Journal Entry for " + date + " ===");
+        System.out.println("=== Journal Entry (" + date + ") ===");
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line;
@@ -80,25 +91,22 @@ public class journalpage {
             br.close();
         } catch (IOException e) {
         }
-
-        System.out.println("\nPress Enter to go back.");
-        sc.nextLine();
     }
 
-    static void editJournal(LocalDate date) {
-        File file = getFile(date);
+    static void editJournal(String username, LocalDate date) {
+        File file = getFile(username, date);
 
-        System.out.println("Edit your journal entry for " + date + ":");
-        String newEntry = sc.nextLine();
-        saveJournal(file, newEntry);
-        System.out.println("Journal updated successfully!");
+        System.out.println("Edit journal:");
+        String entry = sc.nextLine();
+        saveJournal(file, entry);
+        System.out.println("Journal updated.");
     }
 
-    static File getFile(LocalDate date) {
-        File folder = new File("journals");
+    static File getFile(String username, LocalDate date) {
+        File folder = new File("journals/" + username);
         if (!folder.exists())
-            folder.mkdir();
-        return new File("journals/" + date + ".txt");
+            folder.mkdirs();
+        return new File(folder, date + ".txt");
     }
 
     static void saveJournal(File file, String text) {
