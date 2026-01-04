@@ -1,10 +1,6 @@
-package journal;
-
-import java.util.Map;
-
-public class mood {
+public class Mood {
     
-    public static String getMood(String journalInput, String bearerToken) throws Exception{
+    public static String getMood(String journalInput, String bearerToken) throws Exception {
        API api = new API();
        
        String postURL = "https://router.huggingface.co/hf-inference/models/distilbert/distilbert-base-uncased-finetuned-sst-2-english";
@@ -59,24 +55,6 @@ public class mood {
         }
     }
     
-    public static void main(String[] args){
-        try{
-           Map<String, String>env = EnvLoader.loadEnv(".env");
-           String token = env.get("BEARER_TOKEN");
-           if(token == null || token.isEmpty()){
-               System.err.println("Error : BEARER_TOKEN missing in .env file");
-               return;
-           }
-           
-           String journalInput = "Today I learned how to create a simple terminal journal app!";
-           String mood = getMood(journalInput, token);
-           
-            System.out.println("Your Mood : " + mood);
-           
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-    }
 }
         
         
