@@ -47,7 +47,7 @@ public class JournalPageView extends JFrame {
 
         // LEFT PANEL (DATES)
         JPanel left = new JPanel(new BorderLayout(5, 5));
-        left.add(new JLabel("Journal Dates"), BorderLayout.NORTH);
+        left.add(new JLabel("Select Journal Dates"), BorderLayout.NORTH);
         left.add(new JScrollPane(dateList), BorderLayout.CENTER);
 
         // RIGHT PANEL (JOURNAL)
@@ -106,7 +106,17 @@ public class JournalPageView extends JFrame {
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
+            boolean firstLine = true;
+
             while ((line = br.readLine()) != null) {
+
+                // STEP 2: skip weather line
+                if (firstLine && line.startsWith("WEATHER:")) {
+                    firstLine = false;
+                    continue;
+                }
+
+                firstLine = false;
                 journalArea.append(line + "\n");
             }
         } catch (IOException e) {
@@ -121,8 +131,18 @@ public class JournalPageView extends JFrame {
         String date = selected.replace(" (Today)", "");
         File file = new File("journals/" + userEmail + "/" + date + ".txt");
 
+        // Get today's weather
+        String weather = "Unknown";
+        try {
+            weather = WeatherExtraction.getTodayWeather("WP%20Kuala%20Lumpur");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Save weather + journal text
         try (PrintWriter pw = new PrintWriter(file)) {
-            pw.print(journalArea.getText());
+            pw.println("WEATHER:" + weather);   // <-- VERY IMPORTANT
+            pw.println(journalArea.getText());
             JOptionPane.showMessageDialog(this, "Journal saved!");
         } catch (IOException e) {
             e.printStackTrace();
