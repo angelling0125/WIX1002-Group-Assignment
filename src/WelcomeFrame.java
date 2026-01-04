@@ -51,7 +51,8 @@ public class WelcomeFrame extends JFrame {
         });
 
         summaryButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Summary coming soon!");
+            new SummaryFrame(email, this);
+            setVisible(false);
         });
 
         backButton.addActionListener(e -> {
