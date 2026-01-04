@@ -1,5 +1,7 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+
 import java.awt.*;
 import java.io.*;
 import java.time.LocalDate;
@@ -32,6 +34,11 @@ public class SummaryFrame extends JFrame {
             }
         };
         JScrollPane scrollPane = new JScrollPane(table);
+
+        table.setRowHeight(20);
+        JTableHeader header = table.getTableHeader();
+        header.setPreferredSize(new Dimension(header.getWidth(), 32));
+        header.setFont(new Font("Arial", Font.BOLD, 14));
 
         // Load token once
         String token = "";
