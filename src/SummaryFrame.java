@@ -7,13 +7,16 @@ import java.util.Map;
 
 public class SummaryFrame extends JFrame {
 
-    public SummaryFrame(String username) {
+    private JFrame welcomeFrame;
+
+    public SummaryFrame(String username, JFrame welcomeFrame) {
+        this.welcomeFrame = welcomeFrame;
 
         // Window Settings
         setTitle("Weekly Summary");
         setSize(600, 300);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Title
         JLabel title = new JLabel("Weekly Mood & Weather Summary", JLabel.CENTER);
@@ -22,10 +25,15 @@ public class SummaryFrame extends JFrame {
         // Table
         String[] columns = {"Date", "Mood", "Weather"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
-        JTable table = new JTable(model);
+        // Prevent table editing
+        JTable table = new JTable(model) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         JScrollPane scrollPane = new JScrollPane(table);
 
-        // Load token
+        // Load token once
         String token = "";
         try {
             Map<String, String> env = EnvLoader.loadEnv(".env");
@@ -39,19 +47,14 @@ public class SummaryFrame extends JFrame {
         for (int i = 6; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
 
-            String journalText = readJournal(username, date);
+            JournalData data = readJournal(username, date);
 
             String moodResult = "Unknown";
-            String weatherResult = "Unknown";
 
             try {
-                if (journalText != null && !journalText.trim().isEmpty()
-                        && token != null && !token.isEmpty()) {
-
-                    moodResult = mood.getMood(journalText, token);
+                if (!data.text.isEmpty() && token != null && !token.isEmpty()) {
+                    moodResult = Mood.getMood(data.text, token);
                 }
-                
-                weatherResult = WeatherExtraction.getTodayWeather("WP%20Kuala%20Lumpur");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -59,37 +62,63 @@ public class SummaryFrame extends JFrame {
             model.addRow(new Object[]{
                     date.toString(),
                     moodResult,
-                    weatherResult
+                    data.weather
             });
         }
 
+        JButton backBtn = new JButton("Back to main page");
+        backBtn.addActionListener(e -> {
+            welcomeFrame.setVisible(true);
+            dispose();
+        });
+        
         setLayout(new BorderLayout());
         add(title, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
+        add(backBtn, BorderLayout.SOUTH);
+        setVisible(true);
     }
 
     // Read journal
-    private String readJournal(String username, LocalDate date) {
+    private JournalData readJournal(String username, LocalDate date) {
         File file = new File("journals/" + username + "/" + date + ".txt");
 
         if (!file.exists()) {
-            return "";
+            return new JournalData("", "Unknown");
         }
 
         StringBuilder content = new StringBuilder();
+        String weather = "Unknown";
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
+            
+            // Read weather from first line
+            String firstLine = br.readLine();
+            if (firstLine != null && firstLine.startsWith("WEATHER:")) {
+                weather = firstLine.replace("WEATHER:", "").trim();
+            }
+            
             String line;
             while ((line = br.readLine()) != null) {
                 content.append(line).append(" ");
             }
+
             br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return content.toString();
+        return new JournalData(content.toString(), weather);
     }
 
+    private static class JournalData {
+        String text;
+        String weather;
+
+        JournalData(String text, String weather) {
+            this.text = text;
+            this.weather = weather;
+        }
+    }
 }
