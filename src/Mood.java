@@ -45,13 +45,13 @@ public class Mood {
         label = label.toUpperCase();
         
         if(score < 0.6){
-            return "Neutral";
+            return "Neutral 🙂";
         }
         
         switch(label){
-            case "POSITIVE" : return "Happy";
-            case "NEGATIVE" : return "Sad";
-            default : return "Neutral";
+            case "POSITIVE" : return "Happy 😃";
+            case "NEGATIVE" : return "Sad 😢";
+            default : return "Neutral 🙂";
         }
     }
     
