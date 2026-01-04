@@ -17,15 +17,18 @@ public class WeatherExtraction {
     }
 
     private static String extractSummaryForecast(String json) {
-        String key = "\"summary_forecast\":\"";
-        int start = json.indexOf(key) + key.length();
-        int end = json.indexOf("\"", start);
+        String key = "\"summary_forecast\"";
+        int keyIndex = json.indexOf(key);
 
-        if (start < key.length() || end == -1) {
-            return "Unknown";
-        }
+        if (keyIndex == -1) return "Unknown";
 
-        return json.substring(start, end);
+        int colon = json.indexOf(":", keyIndex);
+        int firstQuote = json.indexOf("\"", colon + 1);
+        int secondQuote = json.indexOf("\"", firstQuote + 1);
+
+        if (firstQuote == -1 || secondQuote == -1) return "Unknown";
+
+        return json.substring(firstQuote + 1, secondQuote);
     }
 
     private static String mapWeather (String summary) {
