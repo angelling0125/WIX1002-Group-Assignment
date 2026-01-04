@@ -37,7 +37,7 @@ public class WelcomeFrame extends JFrame {
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JButton journalButton = new JButton("Create, Edit & View Journal");
-        JButton summaryButton = new JButton("View Weekly Mood Summary");
+        JButton summaryButton = new JButton("View Weekly Mood & Weather Summary");
         JButton backButton = new JButton("Back to Login");
 
         journalButton.setAlignmentX(Component.CENTER_ALIGNMENT);
