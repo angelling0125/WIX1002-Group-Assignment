@@ -1,0 +1,3 @@
+WEATHER:Stormy
+this is my first journal
+
