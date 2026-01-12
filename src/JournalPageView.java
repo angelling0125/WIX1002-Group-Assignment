@@ -7,11 +7,12 @@ import java.util.Arrays;
 public class JournalPageView extends JFrame {
 
     private String userEmail;
-    private JFrame welcomeFrame; // reference to go back
+    private JFrame welcomeFrame;
 
     private JList<String> dateList;
     private JTextArea journalArea;
     private DefaultListModel<String> listModel;
+    private JLabel weatherLabel;
 
     public JournalPageView(String userEmail, JFrame welcomeFrame) {
         this.userEmail = userEmail;
@@ -26,16 +27,20 @@ public class JournalPageView extends JFrame {
         loadDates();
 
         dateList = new JList<>(listModel);
+
         journalArea = new JTextArea();
         journalArea.setLineWrap(true);
         journalArea.setWrapStyleWord(true);
+
+        weatherLabel = new JLabel("Weather: Unknown");
+        weatherLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         JButton saveBtn = new JButton("Save / Update");
         JButton backBtn = new JButton("Back to Main Page");
 
         saveBtn.addActionListener(e -> saveJournal());
         backBtn.addActionListener(e -> {
-            this.dispose();
+            dispose();
             welcomeFrame.setVisible(true);
         });
 
@@ -45,14 +50,23 @@ public class JournalPageView extends JFrame {
             }
         });
 
-        // LEFT PANEL (DATES)
+        /* ---------- LEFT PANEL (DATES) ---------- */
         JPanel left = new JPanel(new BorderLayout(5, 5));
         left.add(new JLabel("Select Journal Dates"), BorderLayout.NORTH);
         left.add(new JScrollPane(dateList), BorderLayout.CENTER);
 
-        // RIGHT PANEL (JOURNAL)
+        /* ---------- RIGHT PANEL (JOURNAL) ---------- */
         JPanel right = new JPanel(new BorderLayout(5, 5));
-        right.add(new JLabel("Journal Entry"), BorderLayout.NORTH);
+
+        // Header: Journal Entry (left) + Weather (right)
+        JPanel headerRight = new JPanel(new BorderLayout());
+        JLabel journalLabel = new JLabel("Journal Entry");
+        // journalLabel.setFont(new Font("Arial", Font.BOLD, 12));
+
+        headerRight.add(journalLabel, BorderLayout.WEST);
+        headerRight.add(weatherLabel, BorderLayout.EAST);
+
+        right.add(headerRight, BorderLayout.NORTH);
         right.add(new JScrollPane(journalArea), BorderLayout.CENTER);
 
         JPanel bottomRight = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -60,19 +74,20 @@ public class JournalPageView extends JFrame {
         bottomRight.add(backBtn);
         right.add(bottomRight, BorderLayout.SOUTH);
 
-        // SPLIT PANE (unequal width)
+        /* ---------- SPLIT PANE ---------- */
         JSplitPane splitPane = new JSplitPane(
                 JSplitPane.HORIZONTAL_SPLIT,
                 left,
                 right
         );
-        splitPane.setDividerLocation(200); // left smaller
-        splitPane.setResizeWeight(0.25);   // 25% left, 75% right
+        splitPane.setDividerLocation(200);
+        splitPane.setResizeWeight(0.25);
 
         add(splitPane);
         setVisible(true);
     }
 
+    /* ---------- LOAD DATES ---------- */
     private void loadDates() {
         listModel.clear();
 
@@ -93,6 +108,7 @@ public class JournalPageView extends JFrame {
         }
     }
 
+    /* ---------- LOAD JOURNAL ---------- */
     private void loadJournal() {
         String selected = dateList.getSelectedValue();
         if (selected == null) return;
@@ -101,6 +117,7 @@ public class JournalPageView extends JFrame {
         File file = new File("journals/" + userEmail + "/" + date + ".txt");
 
         journalArea.setText("");
+        weatherLabel.setText("Weather: Unknown");
 
         if (!file.exists()) return;
 
@@ -110,8 +127,9 @@ public class JournalPageView extends JFrame {
 
             while ((line = br.readLine()) != null) {
 
-                // STEP 2: skip weather line
+                // WEATHER LINE
                 if (firstLine && line.startsWith("WEATHER:")) {
+                    weatherLabel.setText("Weather: " + line.replace("WEATHER:", ""));
                     firstLine = false;
                     continue;
                 }
@@ -124,6 +142,7 @@ public class JournalPageView extends JFrame {
         }
     }
 
+    /* ---------- SAVE JOURNAL ---------- */
     private void saveJournal() {
         String selected = dateList.getSelectedValue();
         if (selected == null) return;
@@ -131,7 +150,6 @@ public class JournalPageView extends JFrame {
         String date = selected.replace(" (Today)", "");
         File file = new File("journals/" + userEmail + "/" + date + ".txt");
 
-        // Get today's weather
         String weather = "Unknown";
         try {
             weather = WeatherExtraction.getTodayWeather("WP%20Kuala%20Lumpur");
@@ -139,11 +157,11 @@ public class JournalPageView extends JFrame {
             e.printStackTrace();
         }
 
-        // Save weather + journal text
         try (PrintWriter pw = new PrintWriter(file)) {
-            pw.println("WEATHER:" + weather);   // <-- VERY IMPORTANT
+            pw.println("WEATHER:" + weather);
             pw.println(journalArea.getText());
             JOptionPane.showMessageDialog(this, "Journal saved!");
+            weatherLabel.setText("Weather: " + weather);
         } catch (IOException e) {
             e.printStackTrace();
         }
