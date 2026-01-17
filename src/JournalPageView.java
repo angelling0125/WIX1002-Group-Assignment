@@ -145,8 +145,6 @@ public class JournalPageView extends JFrame {
 
         if (!file.exists()) return;
 
-        StringBuilder journalText = new StringBuilder();
-
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             boolean firstLine = true;
@@ -161,7 +159,6 @@ public class JournalPageView extends JFrame {
                 }
 
                 firstLine = false;
-                // journalText.append(line).append(" ");
                 journalArea.append(line + "\n");
             }
         } catch (IOException e) {
