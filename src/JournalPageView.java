@@ -161,14 +161,12 @@ public class JournalPageView extends JFrame {
                 }
 
                 firstLine = false;
-                journalText.append(line).append(" ");
+                // journalText.append(line).append(" ");
                 journalArea.append(line + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        updateMood(journalText.toString());
     }
 
     /* ---------- MOOD CALCULATION (NOT STORED) ---------- */
@@ -195,6 +193,8 @@ public class JournalPageView extends JFrame {
         File file = new File("journals/" + userEmail + "/" + date + ".txt");
 
         String weather = "Unknown";
+        updateMood(journalArea.getText());
+
         try {
             weather = WeatherExtraction.getTodayWeather("WP%20Kuala%20Lumpur");
         } catch (Exception e) {
