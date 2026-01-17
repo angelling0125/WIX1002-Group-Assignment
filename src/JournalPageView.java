@@ -3,6 +3,7 @@ import java.awt.*;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Map;
 
 public class JournalPageView extends JFrame {
 
@@ -13,6 +14,8 @@ public class JournalPageView extends JFrame {
     private JTextArea journalArea;
     private DefaultListModel<String> listModel;
     private JLabel weatherLabel;
+    private JLabel moodLabel;
+    private String token;
 
     public JournalPageView(String userEmail, JFrame welcomeFrame) {
         this.userEmail = userEmail;
@@ -22,6 +25,14 @@ public class JournalPageView extends JFrame {
         setSize(700, 450);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Load token once
+        try {
+            Map<String, String> env = EnvLoader.loadEnv(".env");
+            token = env.get("BEARER_TOKEN");
+        } catch (Exception e) {
+            token = "";
+        }
 
         listModel = new DefaultListModel<>();
         loadDates();
@@ -33,7 +44,10 @@ public class JournalPageView extends JFrame {
         journalArea.setWrapStyleWord(true);
 
         weatherLabel = new JLabel("Weather: Unknown");
+        moodLabel = new JLabel("Mood: Unknown");   
+        
         weatherLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        moodLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         JButton saveBtn = new JButton("Save / Update");
         JButton backBtn = new JButton("Back to Main Page");
@@ -52,19 +66,28 @@ public class JournalPageView extends JFrame {
 
         /* ---------- LEFT PANEL (DATES) ---------- */
         JPanel left = new JPanel(new BorderLayout(5, 5));
-        left.add(new JLabel("Select Journal Dates"), BorderLayout.NORTH);
+
+        JPanel headerLeft = new JPanel(new GridLayout(2, 1));
+        JLabel dateLabel = new JLabel("Select Journal Dates");
+        JLabel viewDateLabel = new JLabel("(Click date to view journal)");
+
+        headerLeft.add(dateLabel);
+        headerLeft.add(viewDateLabel);
+        left.add(headerLeft, BorderLayout.NORTH);
         left.add(new JScrollPane(dateList), BorderLayout.CENTER);
 
         /* ---------- RIGHT PANEL (JOURNAL) ---------- */
         JPanel right = new JPanel(new BorderLayout(5, 5));
 
         // Header: Journal Entry (left) + Weather (right)
-        JPanel headerRight = new JPanel(new BorderLayout());
+        JPanel headerRight = new JPanel(new GridLayout(2, 2));
         JLabel journalLabel = new JLabel("Journal Entry");
-        // journalLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        JLabel viewJournalLabel = new JLabel("(Click box to write / edit journal)");
 
-        headerRight.add(journalLabel, BorderLayout.WEST);
-        headerRight.add(weatherLabel, BorderLayout.EAST);
+        headerRight.add(journalLabel);
+        headerRight.add(weatherLabel);
+        headerRight.add(viewJournalLabel);
+        headerRight.add(moodLabel);
 
         right.add(headerRight, BorderLayout.NORTH);
         right.add(new JScrollPane(journalArea), BorderLayout.CENTER);
@@ -118,8 +141,11 @@ public class JournalPageView extends JFrame {
 
         journalArea.setText("");
         weatherLabel.setText("Weather: Unknown");
+        moodLabel.setText("Mood: Unknown");
 
         if (!file.exists()) return;
+
+        StringBuilder journalText = new StringBuilder();
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
@@ -135,10 +161,28 @@ public class JournalPageView extends JFrame {
                 }
 
                 firstLine = false;
+                journalText.append(line).append(" ");
                 journalArea.append(line + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        updateMood(journalText.toString());
+    }
+
+    /* ---------- MOOD CALCULATION (NOT STORED) ---------- */
+    private void updateMood(String text) {
+        if (text == null || text.trim().isEmpty() || token == null || token.isEmpty()) {
+            moodLabel.setText("Mood: Unknown");
+            return;
+        }
+
+        try {
+            String moodResult = Mood.getMood(text, token);
+            moodLabel.setText("Mood: " + moodResult);
+        } catch (Exception e) {
+            moodLabel.setText("Mood: Unknown");
         }
     }
 
