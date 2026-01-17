@@ -15,6 +15,7 @@ public class JournalPageView extends JFrame {
     private DefaultListModel<String> listModel;
     private JLabel weatherLabel;
     private JLabel moodLabel;
+    private JButton saveBtn;
     private String token;
 
     public JournalPageView(String userEmail, JFrame welcomeFrame) {
@@ -49,7 +50,7 @@ public class JournalPageView extends JFrame {
         weatherLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         moodLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        JButton saveBtn = new JButton("Save / Update");
+        saveBtn = new JButton("Save / Update");
         JButton backBtn = new JButton("Back to Main Page");
 
         saveBtn.addActionListener(e -> saveJournal());
@@ -117,16 +118,25 @@ public class JournalPageView extends JFrame {
         File folder = new File("journals/" + userEmail);
         if (!folder.exists()) folder.mkdirs();
 
+        String today = LocalDate.now().toString();
+        boolean todayAdded = false;
+
         File[] files = folder.listFiles((d, name) -> name.endsWith(".txt"));
         if (files != null) {
             Arrays.sort(files);
             for (File f : files) {
-                listModel.addElement(f.getName().replace(".txt", ""));
+                String date = f.getName().replace(".txt", "");
+
+                if (date.equals(today)) {
+                    listModel.addElement(date + " (Today)");
+                    todayAdded = true;
+                } else {
+                    listModel.addElement(date);
+                }
             }
         }
 
-        String today = LocalDate.now().toString();
-        if (!listModel.contains(today)) {
+        if (!todayAdded) {
             listModel.addElement(today + " (Today)");
         }
     }
@@ -136,6 +146,12 @@ public class JournalPageView extends JFrame {
         String selected = dateList.getSelectedValue();
         if (selected == null) return;
 
+        boolean isToday = selected.endsWith(" (Today)");
+
+        // LOCK / UNLOCK editing
+        journalArea.setEditable(isToday);
+        saveBtn.setEnabled(isToday);
+
         String date = selected.replace(" (Today)", "");
         File file = new File("journals/" + userEmail + "/" + date + ".txt");
 
@@ -143,7 +159,10 @@ public class JournalPageView extends JFrame {
         weatherLabel.setText("Weather: Unknown");
         moodLabel.setText("Mood: Unknown");
 
-        if (!file.exists()) return;
+        if (!file.exists()) {
+            updateMood("");
+            return;
+        }
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
@@ -164,6 +183,9 @@ public class JournalPageView extends JFrame {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        String journalText = readJournalTextOnly(file);
+        updateMood(journalText);
     }
 
     /* ---------- MOOD CALCULATION (NOT STORED) ---------- */
@@ -189,9 +211,11 @@ public class JournalPageView extends JFrame {
         String date = selected.replace(" (Today)", "");
         File file = new File("journals/" + userEmail + "/" + date + ".txt");
 
-        String weather = "Unknown";
-        updateMood(journalArea.getText());
+        String text = journalArea.getText().trim();
+        updateMood(text);
 
+        String weather = "Unknown";
+        
         try {
             weather = WeatherExtraction.getTodayWeather("WP%20Kuala%20Lumpur");
         } catch (Exception e) {
@@ -207,4 +231,33 @@ public class JournalPageView extends JFrame {
             e.printStackTrace();
         }
     }
+
+    // Helper method to read journal text only
+    private String readJournalTextOnly(File file) {
+        if (!file.exists()) return "";
+
+        StringBuilder text = new StringBuilder();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            boolean firstLine = true;
+
+            while ((line = br.readLine()) != null) {
+
+                // Skip WEATHER line
+                if (firstLine && line.startsWith("WEATHER:")) {
+                    firstLine = false;
+                    continue;
+                }
+
+                firstLine = false;
+                text.append(line).append(" ");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return text.toString().trim();
+    }
+
 }
